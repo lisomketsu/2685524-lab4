@@ -87,10 +87,13 @@ async function fetchBorders(codes) {
 
     borderContainer.innerHTML = '';
 
-    
     const response = await fetch(
         `https://restcountries.com/v3.1/alpha?codes=${codes.join(',')}`
     );
+
+    if (!response.ok) {
+        throw new Error("Error loading bordering countries.");
+    }
 
     const neighbors = await response.json();
 
