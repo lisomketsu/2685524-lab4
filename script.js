@@ -92,7 +92,8 @@ async function fetchBorders(codes) {
     borderContainer.innerHTML = '';
 
 
-    const response = await fetch(`https://restcountries.com/v3.1/alpha?codes=${code}`
+    const response = await fetch(
+        `: https://restcountries.com/v3.1/alpha?codes=${code}`
     );
 
     const neighbors = await response.json();
