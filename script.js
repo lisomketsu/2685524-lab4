@@ -51,9 +51,9 @@ async function handleSearch(name) {
 
 
 async function getCountry(countryName) {
-    const url = `https://restcountries.com/v3.1/name/${countryName}?fullText = true`;
 
-    const response = await fetch(url);
+
+    const response = await fetch(`https://restcountries.com/v3.1/name/${countryName}?fullText = true`);
 
     if (!response.ok) {
         throw new Error(`Country "${countryName}" not found.`);
@@ -92,9 +92,7 @@ async function fetchBorders(codes) {
     borderContainer.innerHTML = '';
 
 
-    const response = await fetch(
-        `: https://restcountries.com/v3.1/alpha?codes=${code}`
-    );
+    const response = await fetch(`https://restcountries.com/v3.1/alpha?codes=${code}`);
 
     const neighbors = await response.json();
 
