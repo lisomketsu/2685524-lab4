@@ -51,7 +51,7 @@ async function handleSearch(name) {
 
 
 async function getCountry(countryName) {
-    const url = `https://restcountries.com/v3.1/name/${countryName}`;
+    const url = `https://restcountries.com/v3.1/name/${countryName}?fullText = true`;
 
     const response = await fetch(url);
 
