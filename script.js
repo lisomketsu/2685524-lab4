@@ -1,96 +1,132 @@
 
-const searchInput = document.querySelector('#country-input');
-const searchBtn = document.querySelector('#search-btn');
-const spinner = document.querySelector('.spinner'); 
-const errorBox = document.querySelector('.error');   
+const searchInput = document.getElementById('country-input');
+const searchBtn = document.getElementById('search-btn');
+const spinner = document.getElementById('loading-spinner');
 const countryInfo = document.getElementById('country-info');
-const borderGrid = document.querySelector('.border-grid');
+const borderContainer = document.getElementById('bordering-countries');
+const errorBox = document.getElementById('error-message');
 
 
-searchBtn.addEventListener('click', () => handleSearch(searchInput.value));
+searchBtn.addEventListener('click', () => {
+    handleSearch(searchInput.value.trim());
+});
 
 searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
-        handleSearch(searchInput.value);
+        handleSearch(searchInput.value.trim());
     }
 });
 
 
 async function handleSearch(name) {
-    if (!name) return;
 
-    
-    spinner.style.display = 'block';
-    errorBox.textContent = '';
-    countryInfo.innerHTML = '';
-    borderGrid.innerHTML = '';
+    if (!name) {
+        showError("Please enter a country name.");
+        return;
+    }
 
     try {
+        showLoading();
+        clearUI();
+
         const country = await getCountry(name);
-        displayCountry(country);
-        
-        
+        renderCountry(country);
+
         if (country.borders && country.borders.length > 0) {
             await fetchBorders(country.borders);
         } else {
-            borderGrid.innerHTML = '<p>No bordering countries.</p>';
+            borderContainer.innerHTML = "<p>No bordering countries.</p>";
+            borderContainer.classList.remove('hidden');
         }
-    } catch (err) {
-        errorBox.textContent = err.message; 
+
+    } catch (error) {
+        showError(error.message);
     } finally {
-        spinner.style.display = 'none'; 
+        hideLoading();
     }
 }
 
 
 async function getCountry(countryName) {
-    
-    const url = `https://restcountries.com/v3.1/name/${countryName}?fullText=true`;
+    const url = `https://restcountries.com/v3.1/name/${countryName}?fullText = true`;
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
         throw new Error(`Country "${countryName}" not found.`);
     }
-    
+
     const result = await response.json();
     return result[0]; 
 }
 
-function displayCountry(country) {
-   
+
+function renderCountry(country) {
+
     countryInfo.innerHTML = `
-        <div class="country-card">
-            <img src="${country.flags.svg}" alt="${country.name.common} flag" style="width: 100%; border-radius: 8px;">
-            <h2>${country.name.common}</h2>
-            <p><strong>Capital:</strong> ${country.capital ? country.capital[0] : 'N/A'}</p>
-            <p><strong>Population:</strong> ${country.population.toLocaleString()}</p>
-            <p><strong>Region:</strong> ${country.region}</p>
-        </div>
+        <h2>${country.name.common}</h2>
+        <img src="${country.flags.svg}" 
+             alt="${country.name.common} flag" 
+             style="width:100px;">
+        <p><strong>Capital:</strong> 
+            ${country.capital ? country.capital[0] : 'N/A'}
+        </p>
+        <p><strong>Population:</strong> 
+            ${country.population.toLocaleString()}
+        </p>
+        <p><strong>Region:</strong> 
+            ${country.region}
+        </p>
     `;
+
+    countryInfo.classList.remove('hidden');
 }
 
 
 async function fetchBorders(codes) {
-    try {
-       
-        const url = ` https://restcountries.com/v3.1/alpha/{code}';
-`;
-        const response = await fetch(url);
-        
-        if (!response.ok) throw new Error("Could not load borders.");
-        
-        const neighbors = await response.json();
 
-        neighbors.forEach(neighbor => {
-            const borderItem = `
-                <div class="border-item" style="padding: 10px; text-align: center;">
-                    <img src="${neighbor.flags.svg}" alt="${neighbor.name.common}" width="50" style="display: block; margin: 0 auto;">
-                    <span>${neighbor.name.common}</span>
-                </div>`;
-            borderGrid.insertAdjacentHTML('beforeend', borderItem);
-        });
-    } catch (err) {
-        console.error("Border fetch error:", err);
-        borderGrid.innerHTML = '<p>Error loading borders.</p>';
-    }
+    borderContainer.innerHTML = '';
+
+    
+    const response = await fetch(
+        `https://restcountries.com/v3.1/alpha?codes=${codes}`
+    );
+
+    const neighbors = await response.json();
+
+    neighbors.forEach(neighbor => {
+        const borderHTML = `
+            <div>
+                <img src="${neighbor.flags.svg}" 
+                     alt="${neighbor.name.common} flag" 
+                     width="50">
+                <p>${neighbor.name.common}</p>
+            </div>
+        `;
+        borderContainer.insertAdjacentHTML('beforeend', borderHTML);
+    });
+
+    borderContainer.classList.remove('hidden');
+}
+
+
+
+function showLoading() {
+    spinner.classList.remove('hidden');
+}
+
+function hideLoading() {
+    spinner.classList.add('hidden');
+}
+
+function showError(message) {
+    errorBox.textContent = message;
+    errorBox.classList.remove('hidden');
+}
+
+function clearUI() {
+    errorBox.classList.add('hidden');
+    countryInfo.classList.add('hidden');
+    borderContainer.classList.add('hidden');
+    borderContainer.innerHTML = '';
 }
