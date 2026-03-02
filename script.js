@@ -89,7 +89,7 @@ async function fetchBorders(codes) {
 
     
     const response = await fetch(
-        `https://restcountries.com/v3.1/alpha?codes=${codes}`
+        `https://restcountries.com/v3.1/alpha?codes=${codes.join(',')}`
     );
 
     const neighbors = await response.json();
