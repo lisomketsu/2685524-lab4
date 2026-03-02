@@ -1,111 +1,151 @@
-const searchInput = document.querySelector('#country-input');
-const searchBtn = document.querySelector('#search-btn');
+// ===============================
+// GET REQUIRED ELEMENTS (BY ID)
+// ===============================
+const searchInput = document.getElementById('country-input');
+const searchBtn = document.getElementById('search-btn');
+const spinner = document.getElementById('loading-spinner');
+const countryInfo = document.getElementById('country-info');
+const borderContainer = document.getElementById('bordering-countries');
+const errorBox = document.getElementById('error-message');
 
-// Trigger on Click
-searchBtn.addEventListener('click', () => handleSearch(searchInput.value));
 
-// Trigger on Enter Key
+// ===============================
+// EVENT LISTENERS
+// ===============================
+searchBtn.addEventListener('click', () => {
+    handleSearch(searchInput.value.trim());
+});
+
 searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
-        handleSearch(searchInput.value);
+        handleSearch(searchInput.value.trim());
     }
 });
 
 
+// ===============================
+// MAIN SEARCH FUNCTION
+// ===============================
+async function handleSearch(name) {
+
+    if (!name) {
+        showError("Please enter a country name.");
+        return;
+    }
+
+    try {
+        showLoading();
+        clearUI();
+
+        const country = await getCountry(name);
+        renderCountry(country);
+
+        if (country.borders && country.borders.length > 0) {
+            await fetchBorders(country.borders);
+        } else {
+            borderContainer.innerHTML = "<p>No bordering countries.</p>";
+            borderContainer.classList.remove('hidden');
+        }
+
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+
+// ===============================
+// FETCH MAIN COUNTRY
+// ===============================
 async function getCountry(countryName) {
     const url = `https://restcountries.com/v3.1/name/${countryName}`;
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
         throw new Error(`Country "${countryName}" not found.`);
     }
-    
+
     const result = await response.json();
-    return result[0]; 
+    return result[0]; // Return single country object
 }
 
 
-async function handleSearch(name) {
-    spinner.style.display = 'block'; 
-    errorBox.textContent = '';       
-
-    try {
-        const data = await getCountry(name); // Call the fetcher
-        renderCountry(data);                // Show the card
-    } catch (err) {
-        errorBox.textContent = err.message;  // Show the error
-    } finally {
-        spinner.style.display = 'none';      // Always hide spinner
-    }
-}
-
+// ===============================
+// RENDER COUNTRY INFO
+// ===============================
 function renderCountry(country) {
-    const container = document.querySelector('.country-card');
-    container.innerHTML = `
-        <img src="${country.flags.svg}" alt="Flag" class="flag">
+
+    countryInfo.innerHTML = `
         <h2>${country.name.common}</h2>
-        <p><strong>Capital:</strong> ${country.capital ? country.capital[0] : 'N/A'}</p>
-        <p><strong>Region:</strong> ${country.region}</p>
-        <p><strong>Population:</strong> ${country.population.toLocaleString()}</p>
+        <img src="${country.flags.svg}" 
+             alt="${country.name.common} flag" 
+             style="width:100px;">
+        <p><strong>Capital:</strong> 
+            ${country.capital ? country.capital[0] : 'N/A'}
+        </p>
+        <p><strong>Population:</strong> 
+            ${country.population.toLocaleString()}
+        </p>
+        <p><strong>Region:</strong> 
+            ${country.region}
+        </p>
     `;
-    
-    // Call next requirement: Bordering countries
-    if (country.borders) {
-        fetchBorders(country.borders);
-    }
+
+    countryInfo.classList.remove('hidden');
 }
 
-async function fetchBorders(codes) {
-    const borderContainer = document.querySelector('.border-grid');
-    borderContainer.innerHTML = ''; // Clear previous borders
 
-    // Fetch all borders at once using the comma-separated codes
-    const response = await fetch(`https://restcountries.com{codes.join(',')}`);
+// ===============================
+// FETCH BORDER COUNTRIES
+// ===============================
+async function fetchBorders(codes) {
+
+    borderContainer.innerHTML = '';
+
+    // ✅ CORRECT API ENDPOINT
+    const response = await fetch(
+        `https://restcountries.com/v3.1/alpha?codes=${codes.join(',')}`
+    );
+
     const neighbors = await response.json();
 
     neighbors.forEach(neighbor => {
-        const borderItem = `
-            <div class="border-item">
-                <img src="${neighbor.flags.svg}" width="30">
-                <span>${neighbor.name.common}</span>
-            </div>`;
-        borderContainer.insertAdjacentHTML('beforeend', borderItem);
+        const borderHTML = `
+            <div>
+                <img src="${neighbor.flags.svg}" 
+                     alt="${neighbor.name.common} flag" 
+                     width="50">
+                <p>${neighbor.name.common}</p>
+            </div>
+        `;
+        borderContainer.insertAdjacentHTML('beforeend', borderHTML);
     });
-}
-function displayCountry(country) {
-    const infoContainer = document.getElementById('country-info');
 
-    // 1. Clear any previous search results or errors
-    infoContainer.innerHTML = '';
-
-    // 2. Build the HTML string using Template Literals
-    // Note: Use a ternary operator (?) to check if capital exists
-    const countryHTML = `
-        <div class="country-card">
-            <img src="${country.flags.svg}" alt="${country.name.common} flag" style="width: 100%; border-radius: 8px;">
-            <h2>${country.name.common}</h2>
-            <p><strong>Capital:</strong> ${country.capital ? country.capital[0] : 'N/A'}</p>
-            <p><strong>Population:</strong> ${country.population.toLocaleString()}</p>
-            <p><strong>Region:</strong> ${country.region}</p>
-        </div>
-    `;
-
-    // 3. Inject the HTML into the container
-    infoContainer.innerHTML = countryHTML;
+    borderContainer.classList.remove('hidden');
 }
 
-async function handleSearch(name) {
-    // Show spinner logic here...
-    
-    try {
-        const data = await getCountry(name); // Your fetch function
-        if (data && data.length > 0) {
-            displayCountry(data[0]); // Pass the first country object
-        }
-    } catch (error) {
-        // Show error logic here...
-    } finally {
-        // Hide spinner logic here...
-    }
+
+// ===============================
+// UI HELPERS
+// ===============================
+function showLoading() {
+    spinner.classList.remove('hidden');
 }
 
+function hideLoading() {
+    spinner.classList.add('hidden');
+}
+
+function showError(message) {
+    errorBox.textContent = message;
+    errorBox.classList.remove('hidden');
+}
+
+function clearUI() {
+    errorBox.classList.add('hidden');
+    countryInfo.classList.add('hidden');
+    borderContainer.classList.add('hidden');
+    borderContainer.innerHTML = '';
+}
