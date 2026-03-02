@@ -1,6 +1,4 @@
-// ===============================
-// GET REQUIRED ELEMENTS (BY ID)
-// ===============================
+
 const searchInput = document.getElementById('country-input');
 const searchBtn = document.getElementById('search-btn');
 const spinner = document.getElementById('loading-spinner');
@@ -9,9 +7,7 @@ const borderContainer = document.getElementById('bordering-countries');
 const errorBox = document.getElementById('error-message');
 
 
-// ===============================
-// EVENT LISTENERS
-// ===============================
+
 searchBtn.addEventListener('click', () => {
     handleSearch(searchInput.value.trim());
 });
@@ -23,9 +19,7 @@ searchInput.addEventListener('keydown', (event) => {
 });
 
 
-// ===============================
-// MAIN SEARCH FUNCTION
-// ===============================
+
 async function handleSearch(name) {
 
     if (!name) {
@@ -55,9 +49,7 @@ async function handleSearch(name) {
 }
 
 
-// ===============================
-// FETCH MAIN COUNTRY
-// ===============================
+
 async function getCountry(countryName) {
     const url = `https://restcountries.com/v3.1/name/${countryName}`;
 
@@ -68,13 +60,10 @@ async function getCountry(countryName) {
     }
 
     const result = await response.json();
-    return result[0]; // Return single country object
-}
+    return result[0];
 
 
-// ===============================
-// RENDER COUNTRY INFO
-// ===============================
+
 function renderCountry(country) {
 
     countryInfo.innerHTML = `
@@ -97,16 +86,14 @@ function renderCountry(country) {
 }
 
 
-// ===============================
-// FETCH BORDER COUNTRIES
-// ===============================
+
 async function fetchBorders(codes) {
 
     borderContainer.innerHTML = '';
 
-    // ✅ CORRECT API ENDPOINT
+
     const response = await fetch(
-        `https://restcountries.com/v3.1/alpha?codes=${codes.join(',')}`
+        `: https://restcountries.com/v3.1/alpha?codes=${code}`
     );
 
     const neighbors = await response.json();
@@ -127,9 +114,7 @@ async function fetchBorders(codes) {
 }
 
 
-// ===============================
-// UI HELPERS
-// ===============================
+
 function showLoading() {
     spinner.classList.remove('hidden');
 }
@@ -148,4 +133,4 @@ function clearUI() {
     countryInfo.classList.add('hidden');
     borderContainer.classList.add('hidden');
     borderContainer.innerHTML = '';
-}
+}}
